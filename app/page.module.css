@@ -1,0 +1,293 @@
+.container {
+  margin-top: 70px;
+  padding: 20px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.container a {
+  text-decoration: none;
+  color: #007bff;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  background-color: #6ad486;
+}
+
+.card img {
+  width: 25%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 75%;
+  padding: 10px;
+}
+
+.cardDetails {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.cardDescription {
+  margin: 5px 0;
+}
+
+.cardPrice {
+  font-size: 16px;
+  color: #333;
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.cardActions button {
+  margin-left: 10px;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.edit {
+  background-color: #f8b45b;
+}
+
+.delete {
+  background-color: #ccc;
+}
+
+.edit:hover {
+  background-color: #fac752;
+}
+
+.delete:hover {
+  background-color: #f00;
+}
+
+/*-------------------------------------------------------------------------------------*/
+
+.mainImage {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain; /* Keeps the image fully visible */
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+.imageRow {
+  display: flex;
+  justify-content: center; /* Centered image-row items */
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.imageRow img {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+
+
+.buttonContainer {
+  text-align: right;
+}
+
+#category option {
+  font-size: 18px; /* Adjust font size */
+  padding: 10px;   /* Adjust padding */
+}
+
+#addImageButton {
+  width: 100px;
+  height: 100px;
+  background-color: transparent;
+  border: 2px solid #a0b0c0; /* Greyish-bluish border color */
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  font-size: 0; /* Hide the default button text */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#addImageButton::before {
+  content: '+';
+  font-size: 40px;
+  color: white;
+  background-color: #a0b0c0; /* Matching background for the circle */
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#addImageContainer {
+  margin: 5px; /* Space around the button */
+  display: inline-block; /* Keep it inline with other images */
+}
+
+.imagePreview {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+}
+.imagePreview img {
+  width: 100px; /* Adjust the size as needed */
+  height: 100px;
+  margin: 5px;
+  position: relative;
+  transition: opacity 0.3s ease;
+}
+
+.imagePreview img:hover .deleteIcon {
+  opacity: 1;
+}
+
+.deleteIcon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  border: 2px solid red; /* Red outline */
+  color: red; /* Red X */
+  border-radius: 50%; /* Round shape */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  text-align: center;
+  z-index: 99;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  height: 80%;
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  padding: 20px; /* Remove padding to avoid gaps */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden; /* Ensure no overflow issues */
+  max-width: 90%; /* Set a maximum width limit */
+}
+
+.modalContent {
+  display: flex; /* Use flexbox for proper alignment */
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.modalContent img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain; /* Maintain aspect ratio and fit within container */
+  border-radius: 8px;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+
+/* Enable hover only on non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  
+}
+
+@media (prefers-reduced-motion) {
+  .card:hover span {
+    transform: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+  
+}
+
+/* Tablet and Smaller Desktop */
+@media (min-width: 701px) and (max-width: 1120px) {
+  
+}
+
+@media (prefers-color-scheme: dark) {
+  .vercelLogo {
+    filter: invert(1);
+  }
+
+  .logo {
+    filter: invert(1) drop-shadow(0 0 0.3rem #ffffff70);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}

@@ -1,0 +1,91 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import styles from "../page.module.css";
+
+export default function LoginPage() {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const response = await fetch('https://dreamlocation.uz/api/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    console.log(response);
+
+    if (response.ok) {
+      const data = await response.json();
+      const { token } = data;
+      
+      localStorage.setItem('token', token); // Save token in localStorage
+      // Handle successful login, for example, redirect to another page
+      router.push('/admin');
+
+    } else {
+      // Handle login error
+      alert('Login failed. Please check your credentials and try again.');
+      console.log("response not ok" + response.text())
+    }
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>
+      <header style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h1>Craft Shop Admin Page</h1>
+      </header>
+      <div className={styles.container}>
+        <h2>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Username:</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Password:</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <button
+            type="submit"
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: '#0070f3',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
