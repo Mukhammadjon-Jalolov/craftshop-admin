@@ -14,6 +14,7 @@ interface Item {
   price: number;
   imgUrl: string;
   category: string;
+  vendor: string;
 }
 
 export default function Home() {
@@ -73,8 +74,12 @@ export default function Home() {
 
   const handleEditClick = (item: Item) => {
     console.log(item);
-    setProduct(item);
-    router.push('/editproduct');
+    //setProduct(item);
+    localStorage.removeItem('editingproduct');
+    localStorage.setItem('editingproduct', JSON.stringify(item));
+    if(localStorage.getItem('editingproduct')){
+      router.push('/editproduct');
+    }
   }
 
   return (

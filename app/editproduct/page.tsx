@@ -8,9 +8,22 @@ import { useRouter } from 'next/navigation';
 import exp from "constants";
 import { useProduct } from '../../context/ProductContext';
 
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  imgUrl: string;
+  category: string;
+  vendor: string;
+}
+
+interface ImageResult {
+  imgUrl: string;
+}
+
 interface Results {
-  images: string[]; // Adjust this type based on the actual structure of your results
-  categories: string[];
+  images: ImageResult[];
 }
 
 interface TempImage {
@@ -19,55 +32,84 @@ interface TempImage {
 }
 
 export default function EditProduct() {
-    const { product } = useProduct();
+    //const { product } = useProduct();
 
-    const mainImage = product?.imgUrl || '';
+    //const mainImage = product?.imgUrl || '';
 
-    const [mainImageSrc, setMainImageSrc] = useState(mainImage);
+    const [currentProduct, setProduct] = useState<Product>();
+    const [currentOriginalProduct, setOriginalProduct] = useState<Product>();
+    const [mainImageSrc, setMainImageSrc] = useState('');
     const [editingImages, setEditingImages] = useState(false);
     const [editingFields, setEditingFields] = useState(false);
     const [extraImages, setExtraImages] = useState<string[]>([]);
+    const [originalImages, setOriginalImages] = useState<string[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
     const [selectedImages, setSelectedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [modalImage, setModalImage] = useState<string | null>(null);
+    const [tobeDeletedImg, setDeletingImages] = useState<string[]>([]);
+
+    var myproduct: number;
 
     useEffect(() => {
-      if(!product) return;
-      getExtraImages();
+      const storedProduct = localStorage.getItem('editingproduct');
+      if (storedProduct) {
+        const parsedProduct = JSON.parse(storedProduct) as Product;
+        setMainImageSrc(parsedProduct.imgUrl);
+        setProduct(parsedProduct);
+        setOriginalProduct(parsedProduct);
+        getExtraImages(parsedProduct.id, parsedProduct.imgUrl); // Ensure `id` exists
+        getCategories();
+        myproduct = parsedProduct.id;
+      } else {
+        console.error('No product found in localStorage');
+      }
     }, []);
     
-    const getExtraImages = async () => {
+    const getExtraImages = async (itemId: number, mainImg: string) => {
       try{
         const editdata = {
-          itemId: product.id,
-          imgUrl: product.imgUrl,
-          category: product.category
+          productId: itemId
         };
 
-          // This request is done to get extra images of the product. Because produt item has only one image by default
-          const fetchData = async () => {
-              const response = await fetch('https://dreamlocation.uz/extraimages', {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(editdata),
-              });
-              const results = await response.json();
-              console.log('extra images received: ' + results);
-              handleResults(results);
-          }
-          fetchData();
+        // This request is done to get extra images of the product. Because produt item has only one image by default
+        const fetchData = async () => {
+            const response = await fetch('https://dreamlocation.uz/api/getimages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(editdata),
+            });
+            const results = await response.json();
+            handleResults(results, mainImg);
+        }
+        fetchData();
 
       } catch(error){
         console.error('Error verifying token:', error);
       }
     }
 
-    const handleResults = (results: Results) => {
-        setExtraImages(results.images);
+    const getCategories = async () => {
+      const fetchData = async () => {
+        const response = await fetch('https://dreamlocation.uz/getcategories', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        const results = await response.json();
         setCategories(results.categories);
+      }
+      fetchData();
+    }
+
+    const handleResults = (results: Results, mainImg: string) => {
+      const imageUrls = results.images.map((image: ImageResult) => image.imgUrl);
+      imageUrls.unshift(mainImg);
+      setExtraImages(imageUrls);
+      setOriginalImages(imageUrls);
     }
 
     const handleEditFields = () => {
@@ -75,6 +117,7 @@ export default function EditProduct() {
     }
 
     const cancelEditFields = () => {
+      setProduct(currentOriginalProduct);
       setEditingFields(false);
     }
     
@@ -86,8 +129,20 @@ export default function EditProduct() {
       setEditingImages(true);
     };
 
+    const handleDeleteImages = (img: string) => {
+      setDeletingImages((prevImages) => {
+        if (prevImages.includes(img)) return prevImages;
+        return [...prevImages, img];
+      });
+      setExtraImages((prevImages) => prevImages.filter(image => image !== img));
+    };
+
     const cancelEditImages = () => {
       setEditingImages(false);
+      setImagePreviews([]);
+      setExtraImages(originalImages);
+      setSelectedImages([]);
+      setDeletingImages([]);
     }
 
     const handleImageDelete = (index: number) => {
@@ -96,7 +151,64 @@ export default function EditProduct() {
     };
 
     const saveImageChanges = async () => {
+      const formData = new FormData();
+      const itemId = myproduct;
+      formData.append('itemId', itemId.toString());
+      formData.append('itemName', currentProduct!.name);
+      
+      selectedImages.forEach((file, index) => {
+        formData.append(`newImages`, file);
+      });
+      formData.append('deletedImages', JSON.stringify(tobeDeletedImg));
 
+      // Make the POST request
+      try {
+        const response = await fetch('/', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          // Handle the response
+          console.log('Images updated successfully');
+          window.alert('Images updated successfully');
+        } else {
+          console.error('Failed to update images');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+
+      console.log(selectedImages);
+      console.log(tobeDeletedImg);
+    }
+
+    const saveProductDetails = async() => {
+      const formData = new FormData();
+
+      // Append state values to FormData
+      formData.append('itemId', currentProduct!.id.toString());
+      formData.append('itemName', currentProduct!.name);
+      formData.append('description', currentProduct!.description);
+      formData.append('category', currentProduct!.category);
+      formData.append('price', currentProduct!.price.toString());
+
+      try {
+        // Send the formData to the server
+        const response = await fetch('/updateimages', {
+          method: 'POST',
+          body: formData,
+        });
+    
+        const result = await response.json();
+        if (result.success) {
+          alert('Images and data have been successfully updated!');
+        } else {
+          alert('Failed to update images and data.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
 
     const handleNewImageClick = (src: string) => {
@@ -124,7 +236,7 @@ export default function EditProduct() {
       event.target.value = ''; // Reset the input
     };
 
-    if (!product) {
+    if (!currentProduct) {
       return <div>Loading...</div>; // You can return a loading state or redirect the user
     }
 
@@ -160,6 +272,7 @@ export default function EditProduct() {
                     className={styles.deleteImageButton}
                     data-index={index}
                     data-src={source.split('/').pop()}
+                    onClick={() => handleDeleteImages(source)}
                     >
                       Delete
                   </button>
@@ -169,44 +282,46 @@ export default function EditProduct() {
           ))}
         </div>
 
-        <label htmlFor="images">Select Images:</label>
-            <input 
-                type="file" 
-                id="images" 
-                name="images" 
-                multiple 
-                accept="image/*" 
-                style={{ display: 'none' }} 
-                onChange={handleImageChange} />
+        {editingImages && 
+        (<><label htmlFor="images">Select Images:</label>
+        <input
+          type="file"
+          id="images"
+          name="images"
+          multiple
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleImageChange} />
 
-            <div className={styles.imagePreview} id="imagePreview">
-              {imagePreviews.map((src, index) => (
-                  <div key={index} style={{ position: 'relative', display: 'inline-block', margin: '5px' }}>
-                    <Image 
-                        src={src} 
-                        alt={`Preview ${index}`} 
-                        style={{ cursor: 'pointer' }} 
-                        onClick={() => handleNewImageClick(src)} 
-                        unoptimized />
-                    <div 
-                        className={styles.deleteIcon} 
-                        style={{ position: 'absolute', top: 0, right: 0, cursor: 'pointer' }} 
-                        onClick={() => handleImageDelete(index)} >
-                        X
-                    </div>
-                  </div>
-              ))}
-              <div id={styles.addImageContainer}>
-                  <button 
-                  type="button" 
-                  id={styles.addImageButton} 
-                  className="btn-select" 
-                  onClick={() => document.getElementById('images')?.click()}
-                  >
-                  Add Image
-                  </button>
+          <div className={styles.imagePreview} id="imagePreview">
+            {imagePreviews.map((src, index) => (
+              <div key={index} style={{ position: 'relative', display: 'inline-block', margin: '5px' }}>
+                <Image
+                  src={src}
+                  alt={`Preview ${index}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleNewImageClick(src)}
+                  unoptimized />
+                <div
+                  className={styles.deleteIcon}
+                  style={{ position: 'absolute', top: 0, right: 0, cursor: 'pointer' }}
+                  onClick={() => handleImageDelete(index)}>
+                  X
+                </div>
               </div>
+            ))}
+            <div id={styles.addImageContainer}>
+              <button
+                type="button"
+                id={styles.addImageButton}
+                className="btn-select"
+                onClick={() => document.getElementById('images')?.click()}
+              >
+                Add Image
+              </button>
             </div>
+          </div></>)
+        }
 
         <div className={styles.buttonContainer}>
           {!editingImages && <button type="button"
@@ -230,38 +345,65 @@ export default function EditProduct() {
         </div>
 
           <label htmlFor="itemId">Item ID</label> <br/>
-          <input type="text" id="itemId" name="itemId" maxLength={50} value={product.id} required disabled />
+          <input type="text" id="itemId" name="itemId" maxLength={50} value={currentProduct.id} required disabled />
           <br/>
 
           <label htmlFor="itemName">Name</label> <br/>
           {editingFields ? 
-            <input type="text" id="itemName" name="itemName" maxLength={50} value={product.name} required /> : 
-            <input type="text" id="itemName" name="itemName" maxLength={50} value={product.name} required disabled />
+            <input 
+              type="text" 
+              id="itemName" 
+              name="itemName" 
+              maxLength={50} 
+              value={currentProduct.name} required /> : 
+            <input 
+              type="text" 
+              id="itemName" 
+              name="itemName" 
+              maxLength={50} 
+              value={currentProduct.name} required disabled />
           }
           <br/>
 
           <label htmlFor="description">Description</label> <br/>
           {editingFields ? 
-            <textarea id="description" name="description" maxLength={200} rows={3} required>{product.description}</textarea> : 
-            <textarea id="description" name="description" maxLength={200} rows={3} required disabled>{product.description}</textarea>
+            <textarea 
+              id="description" 
+              name="description" 
+              maxLength={200} 
+              rows={3} 
+              required>
+                {currentProduct.description}
+            </textarea> : 
+            <textarea 
+              id="description" 
+              name="description" 
+              maxLength={200} 
+              rows={3} 
+              required disabled>{currentProduct.description}</textarea>
           }
           <br/>
 
           <label htmlFor="category">Category</label> <br/>
-          <select id="category" name="category" required value={product.category}>
+          {editingFields ? <select id="category" name="category" required value={currentProduct.category}>
             {categories.map((category, index) => (
               <option key={index} value={category}>{category}</option>
             ))}
-          </select>
+          </select> : 
+          <select id="category" name="category" required value={currentProduct.category} disabled>
+          {categories.map((category, index) => (
+            <option key={index} value={category}>{category}</option>
+          ))}
+        </select> }
+          
           <br/>
 
           <label htmlFor="price">Price:</label> <br/>
-          {editingFields ? <input type="text" id="price" name="price" value={product.price} required /> : 
-          <input type="text" id="price" name="price" value={product.price} required disabled />}
+          {editingFields ? <input type="text" id="price" name="price" value={currentProduct.price} required /> : 
+          <input type="text" id="price" name="price" value={currentProduct.price} required disabled />}
           <br/>
 
           <div className={styles.buttonContainer}>
-            
             {!editingFields && <button 
               type="button" 
               id="editButton" 
@@ -289,14 +431,13 @@ export default function EditProduct() {
                 <span className={styles.close} onClick={closeModal}>&times;</span>
                 <div className={styles.modalContent}>
                 <Image 
-                    id="modalImage" 
-                    src={modalImage} 
-                    alt="Modal Preview"
-                    unoptimized />
+                  id="modalImage" 
+                  src={modalImage} 
+                  alt="Modal Preview"
+                  unoptimized />
                 </div>
             </div>
             )}
-
           </div>
       </div>
     </div>

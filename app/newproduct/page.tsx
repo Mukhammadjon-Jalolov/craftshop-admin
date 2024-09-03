@@ -20,7 +20,6 @@ export default function CreateProduct() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [modalImage, setModalImage] = useState<string | null>(null);
   const [categories, setCategories] = useState([]);
-
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
