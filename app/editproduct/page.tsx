@@ -163,7 +163,7 @@ export default function EditProduct() {
 
       // Make the POST request
       try {
-        const response = await fetch('/', {
+        const response = await fetch('https://dreamlocation.uz/updateimages', {
           method: 'POST',
           body: formData,
         });
@@ -195,7 +195,7 @@ export default function EditProduct() {
 
       try {
         // Send the formData to the server
-        const response = await fetch('/updateimages', {
+        const response = await fetch('https://dreamlocation.uz/updateproduct', {
           method: 'POST',
           body: formData,
         });
@@ -422,7 +422,7 @@ export default function EditProduct() {
             {editingFields && <button 
               type="submit" 
               id="saveButton" 
-              onClick={cancelEditFields}>
+              onClick={saveProductDetails}>
                 Save
             </button>}
 
