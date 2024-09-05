@@ -3,24 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from "../page.module.css";
-import GoogleMapComponent from '../../components/GoogleMapComponent';
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
-  const [address, setAddress] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [brand, setBrand] = useState('');
   const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const router = useRouter();
 
-  const handleLocationSelect = (selectedLocation: { lat: number; lng: number }) => {
-    selectedLocation.lat = parseFloat(selectedLocation.lat.toFixed(6));
-    selectedLocation.lng = parseFloat(selectedLocation.lng.toFixed(6));
-    setLocation(selectedLocation);
-  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -31,30 +20,20 @@ export default function RegisterPage() {
 
     // Append state values to FormData
     formData.append('username', username);
-    formData.append('address', address);
-    formData.append('phoneNumber', phoneNumber);
-    formData.append('brand', brand);
     formData.append('password', password);
-    if(location){
-      formData.append('lat', String(location.lat));
-      formData.append('lon', String(location.lng));
-    }
 
     try {
       // Send the formData to the server
-      const response = await fetch('https://dreamlocation.uz/api/register', {
+      const response = await fetch('https://dreamlocation.uz/api/savenewpass', {
         method: 'POST',
         body: formData,
       });
   
       const result = await response.json();
       if (result.success) {
-        alert('Registration started');
-        //***************************************************************************************** */
-        //****** REDIRECTING TO A PAGE TO ENTER SMS CODE */
-        //****** IN THAT PAGE SMS CODE IS ENTERED AND SEND BACK TO SERVER */
+        alert('Images and data have been successfully updated!');
       } else {
-        alert('Failed to start registration');
+        alert('Failed to update images and data.');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -67,7 +46,7 @@ export default function RegisterPage() {
         <h1>Craft Shop Admin Page</h1>
       </header>
       <div className={styles.container}>
-        <h2>Foydalanuvchi ma'lumotlari</h2>
+        <h2>Yangi parol o'rnatish</h2>
 
           <div style={{ marginBottom: '5px', marginTop: '20px'}}>
             <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Foydalanuvchi nomi (login)</label>
@@ -77,58 +56,6 @@ export default function RegisterPage() {
               name="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
-          </div>
-          
-          <div style={{ marginBottom: '5px' }}>
-            <label htmlFor="phone" style={{ display: 'block', marginBottom: '5px' }}>Telefon raqamingiz</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              pattern="[0-9]{12}"
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '5px' }}>
-            <label htmlFor="address" style={{ display: 'block', marginBottom: '5px' }}>Manzil</label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
-          </div>
-
-          <div style={{ marginBottom: '5px', position: 'relative', width: '100%' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Xaritada joyingizni belgilang</label>
-            <GoogleMapComponent onLocationSelect={handleLocationSelect} selectedLocation={location} />
-            {location && (
-              <div>
-                <p>Selected Location:</p>
-                <p>Latitude: {location.lat}</p>
-                <p>Longitude: {location.lng}</p>
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginBottom: '5px', marginTop: '20px' }}>
-            <label htmlFor="brand" style={{ display: 'block', marginBottom: '5px' }}>Ustaxona nomi</label>
-            <input
-              type="text"
-              id="brand"
-              name="brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
               required
               style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
             />
@@ -160,13 +87,13 @@ export default function RegisterPage() {
           </div>
 
           <div style={{ marginBottom: '5px', position: 'relative', width: '100%' }}>
-            <label htmlFor="password2" style={{ display: 'block', marginBottom: '5px' }}>Parolni yana kiriting</label>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Parolni yana kiriting</label>
             <input
               type={showPassword ? 'text' : 'password'}
-              id="password2"
-              name="password2"
-              value={password2}
-              onChange={(e) => setPassword2(e.target.value)}
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
               style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
             />
@@ -197,7 +124,7 @@ export default function RegisterPage() {
               cursor: 'pointer',
             }}
           >
-            Ro'yxatdan o'tish
+            Yangi parolni saqlash
           </button>
 
       </div>

@@ -6,26 +6,19 @@ import styles from "../page.module.css";
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
-  const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const response = await fetch('https://dreamlocation.uz/api/register', {
+    const response = await fetch('https://dreamlocation.uz/api/forgotpass', {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username, phoneNumber }),
     });
 
     console.log(response);
@@ -51,10 +44,10 @@ export default function RegisterPage() {
         <h1>Craft Shop Admin Page</h1>
       </header>
       <div className={styles.container}>
-        <h2>User details</h2>
+        <h2>Parolni tiklash</h2>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '5px' }}>
+          <div style={{ marginBottom: '5px', marginTop: '20px' }}>
             <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Username:</label>
             <input
               type="text"
@@ -79,56 +72,6 @@ export default function RegisterPage() {
               required
               style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
             />
-          </div>
-
-          <div style={{ marginBottom: '5px', position: 'relative', width: '100%' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>New Password:</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
-            <span
-              onClick={togglePasswordVisibility}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: '10px',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-              }}
-            >
-              {showPassword ? '👁️' : '👁️‍🗨️'}
-            </span>
-          </div>
-
-          <div style={{ marginBottom: '5px', position: 'relative', width: '100%' }}>
-            <label htmlFor="password" style={{ display: 'block', marginBottom: '5px' }}>Repeat new password:</label>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              id="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
-            <span
-              onClick={togglePasswordVisibility}
-              style={{
-                position: 'absolute',
-                top: '50%',
-                right: '10px',
-                transform: 'translateY(-50%)',
-                cursor: 'pointer',
-              }}
-            >
-              {showPassword ? '👁️' : '👁️‍🗨️'}
-            </span>
           </div>
           
           <button
