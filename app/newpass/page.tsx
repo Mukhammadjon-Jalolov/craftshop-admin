@@ -46,7 +46,7 @@ export default function RegisterPage() {
         <h1>Craft Shop Admin Page</h1>
       </header>
       <div className={styles.container}>
-        <h2>Yangi parol o'rnatish</h2>
+        <h2>Yangi parol o&apos;rnatish</h2>
 
           <div style={{ marginBottom: '5px', marginTop: '20px'}}>
             <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Foydalanuvchi nomi (login)</label>

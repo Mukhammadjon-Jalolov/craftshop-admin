@@ -6,19 +6,23 @@ import styles from "../page.module.css";
 
 export default function ConfirmPage() {
   const [code, setCode] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState('');
   const router = useRouter();
 
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  useEffect(() => {
+    const regdata = localStorage.getItem('regprocess');
+    if(regdata){
+      const localData = JSON.parse(regdata);
+      console.log(localData.code);
+      setUsername(localData.username);
+    }
+  }, []);
 
   const sendRegistrationDetails = async() => {
     const formData = new FormData();
-
     // Append state values to FormData
-    formData.append('confirmationCode', code);
+    formData.append('smsCode', code);
+    formData.append('username', username);
 
     try {
       // Send the formData to the server
@@ -28,10 +32,11 @@ export default function ConfirmPage() {
       });
   
       const result = await response.json();
-      if (result.success) {
-        alert('Images and data have been successfully updated!');
+      if (response.ok) {
+        window.alert('Registration complete! You can login now');
+        router.push('/login');
       } else {
-        alert('Failed to update images and data.');
+        console.log(result.error);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -74,7 +79,6 @@ export default function ConfirmPage() {
           >
             Kodni tasdiqlash
           </button>
-
       </div>
     </div>
   );

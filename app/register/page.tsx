@@ -4,9 +4,17 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from "../page.module.css";
 import GoogleMapComponent from '../../components/GoogleMapComponent';
+import { json } from 'stream/consumers';
+
+function Username(){
+  return(
+    <span style={{color: 'red'}}>Bunday foydalanuvchi mavjud. Boshqa nom o'ylab toping</span>
+  );
+}
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [brand, setBrand] = useState('');
@@ -26,38 +34,61 @@ export default function RegisterPage() {
     setShowPassword(!showPassword);
   };
 
-  const sendRegistrationDetails = async() => {
-    const formData = new FormData();
-
-    // Append state values to FormData
-    formData.append('username', username);
-    formData.append('address', address);
-    formData.append('phoneNumber', phoneNumber);
-    formData.append('brand', brand);
-    formData.append('password', password);
-    if(location){
-      formData.append('lat', String(location.lat));
-      formData.append('lon', String(location.lng));
+  const checkUsernameAvailability = async () => {
+    if (username.trim()) {
+        const response = await fetch('/api/usernamecheck', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({username: username}),
+        });
+        const data = await response.json();
+        setUsernameAvailable(data.available);
     }
+};
+
+  const sendRegistrationDetails = async() => {
+    
+    if (!location) {
+      alert('Map location must be set');
+      return;
+    }
+
+    const lat = location.lat.toString();
+    const lon = location.lng.toString();
 
     try {
       // Send the formData to the server
-      const response = await fetch('https://dreamlocation.uz/api/register', {
+      const response = await fetch('https://dreamlocation.uz/registration', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({username: username, address: address, phoneNumber: phoneNumber, brand: brand, password: password, lat: lat, lon: lon}),
       });
-  
-      const result = await response.json();
-      if (result.success) {
-        alert('Registration started');
-        //***************************************************************************************** */
-        //****** REDIRECTING TO A PAGE TO ENTER SMS CODE */
-        //****** IN THAT PAGE SMS CODE IS ENTERED AND SEND BACK TO SERVER */
-      } else {
-        alert('Failed to start registration');
+
+      if (!response.ok) {
+        // Extract error message from the response
+        const errorResponse = await response.json();
+        alert(`Error: ${errorResponse.info || 'Something went wrong!'}`);
+        console.log(errorResponse.info);
+        console.log(errorResponse.error);
+        return;
       }
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('registration started and code: ', data.smsCode );
+        localStorage.setItem('regprocess', JSON.stringify({username: data.username, code: data.smsCode}));
+        // Redirect to confirmation page for SMS code
+        router.push('/confirmation');
+      }
+
     } catch (error) {
+      // Log the error and show a friendly message
       console.error('Error:', error);
+      alert('An unexpected error occurred. Please try again later.');
     }
   }
 
@@ -67,19 +98,26 @@ export default function RegisterPage() {
         <h1>Craft Shop Admin Page</h1>
       </header>
       <div className={styles.container}>
-        <h2>Foydalanuvchi ma'lumotlari</h2>
+        <h2>Foydalanuvchi ma&apos;lumotlari</h2>
 
           <div style={{ marginBottom: '5px', marginTop: '20px'}}>
-            <label htmlFor="username" style={{ display: 'block', marginBottom: '5px' }}>Foydalanuvchi nomi (login)</label>
+            <label
+              htmlFor="username"
+              style={{ display: 'block', marginBottom: '5px' }}>
+              Foydalanuvchi nomi (login) {usernameAvailable ? <Username /> : ''}
+            </label>
             <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-            />
+                type="text"
+                id="username"
+                name="username"
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setUsernameAvailable(null);
+                }}
+                onBlur={checkUsernameAvailability}
+                required
+                style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }} />
           </div>
           
           <div style={{ marginBottom: '5px' }}>
@@ -197,7 +235,7 @@ export default function RegisterPage() {
               cursor: 'pointer',
             }}
           >
-            Ro'yxatdan o'tish
+            Ro&apos;yxatdan o&apos;tish
           </button>
 
       </div>

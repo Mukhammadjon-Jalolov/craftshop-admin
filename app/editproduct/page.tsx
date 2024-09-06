@@ -49,8 +49,6 @@ export default function EditProduct() {
     const [modalImage, setModalImage] = useState<string | null>(null);
     const [tobeDeletedImg, setDeletingImages] = useState<string[]>([]);
 
-    var myproduct: number;
-
     useEffect(() => {
       const storedProduct = localStorage.getItem('editingproduct');
       if (storedProduct) {
@@ -60,11 +58,10 @@ export default function EditProduct() {
         setOriginalProduct(parsedProduct);
         getExtraImages(parsedProduct.id, parsedProduct.imgUrl); // Ensure `id` exists
         getCategories();
-        myproduct = parsedProduct.id;
       } else {
         console.error('No product found in localStorage');
       }
-    }, []);
+    }, [currentProduct]);
     
     const getExtraImages = async (itemId: number, mainImg: string) => {
       try{
@@ -152,12 +149,11 @@ export default function EditProduct() {
 
     const saveImageChanges = async () => {
       const formData = new FormData();
-      const itemId = myproduct;
-      formData.append('itemId', itemId.toString());
+      formData.append('itemId', currentProduct!.id.toString());
       formData.append('itemName', currentProduct!.name);
       
       selectedImages.forEach((file, index) => {
-        formData.append(`newImages`, file);
+        formData.append('newImages', file);
       });
       formData.append('deletedImages', JSON.stringify(tobeDeletedImg));
 

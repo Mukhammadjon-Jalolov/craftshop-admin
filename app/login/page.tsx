@@ -23,23 +23,23 @@ export default function LoginPage() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ username: username, password: password }),
     });
 
     console.log(response);
 
+    const result = await response.json();
+
     if (response.ok) {
-      const data = await response.json();
-      const { token } = data;
+      const { token } = result;
       
       localStorage.setItem('token', token); // Save token in localStorage
       // Handle successful login, for example, redirect to another page
       router.push('/admin');
-
     } else {
       // Handle login error
       alert('Login failed. Please check your credentials and try again.');
-      console.log("response not ok" + response.text())
+      console.log("response not ok", result.info);
     }
   };
 

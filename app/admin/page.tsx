@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { useProduct } from '../../context/ProductContext';
+import Supervisor from '../../components/Supervisor';
 
 interface Item {
   id: number;
@@ -19,16 +20,25 @@ interface Item {
 
 export default function Home() {
   const router = useRouter();
-  const {setProduct} = useProduct();
-
+  const [isAdmin, setIsAdmin] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('token'); // or sessionStorage.getItem('token');
-    
+
     try{
       if (token) {
+
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const role = decodedToken.role;
+
+        if(role == 'admin'){
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+
         // Make authenticated requests or handle token
         const fetchData = async () => {
           const response = await fetch('https://dreamlocation.uz/verify-token', {
@@ -40,6 +50,7 @@ export default function Home() {
           if(response.ok){
             getAllData();
           } else {
+            setIsAdmin(false);
             router.push('/login');
           }
         }
@@ -83,21 +94,22 @@ export default function Home() {
   }
 
   return (
-    <><header>
+    <>
+    {isAdmin ? <Supervisor /> : 
+    <>
+    <header>
       <h1>Admin Page</h1>
       <a href="/logout" className={styles.logout}>Logout</a>
     </header>
       <div className={styles.container}>
         <a href="/newproduct">Add Item</a>
-
         <div className={styles.cards}>
           {items.map(item => (
             <div key={item.id} className={styles.card}>
-              <Image 
-                src={`https://dreamlocation.uz/rasmlar/${encodeURIComponent(item.imgUrl)}`} 
+              <Image
+                src={`https://dreamlocation.uz/rasmlar/${encodeURIComponent(item.imgUrl)}`}
                 alt={item.name}
-                unoptimized
-                />
+                unoptimized />
               <div className={styles.cardContent}>
                 <div className={styles.cardDetails}>
                   <div className={styles.cardTitle}>{item.name}</div>
@@ -105,28 +117,29 @@ export default function Home() {
                   <div className={styles.cardPrice}>Price: {item.price}</div>
                 </div>
                 <div className={styles.cardActions}>
-                    <button
-                      className={styles.edit}
-                      onClick={() => handleEditClick(item)}
-                      style={{
-                        padding: '8px 16px',
-                        marginRight: '10px',
-                        backgroundColor: '#0070f3',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Edit
-                    </button>
-                  <button className={styles.delete} onClick={() => console.log('Delete functionality here')} >Delete</button>
+                  <button
+                    className={styles.edit}
+                    onClick={() => handleEditClick(item)}
+                    style={{
+                      padding: '8px 16px',
+                      marginRight: '10px',
+                      backgroundColor: '#0070f3',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button className={styles.delete} onClick={() => console.log('Delete functionality here')}>Delete</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </div></>
+    }
     </>
   );
 }
