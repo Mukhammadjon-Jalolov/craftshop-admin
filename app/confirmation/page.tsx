@@ -19,16 +19,15 @@ export default function ConfirmPage() {
   }, []);
 
   const sendRegistrationDetails = async() => {
-    const formData = new FormData();
-    // Append state values to FormData
-    formData.append('smsCode', code);
-    formData.append('username', username);
 
     try {
       // Send the formData to the server
       const response = await fetch('https://dreamlocation.uz/api/confirmation', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({smsCode: code}),
       });
   
       const result = await response.json();

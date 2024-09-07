@@ -8,13 +8,13 @@ import { json } from 'stream/consumers';
 
 function Username(){
   return(
-    <span style={{color: 'red'}}>Bunday foydalanuvchi mavjud. Boshqa nom o'ylab toping</span>
+    <span style={{color: 'red'}}>Bunday foydalanuvchi mavjud. Boshqa nom o&apos;ylab toping</span>
   );
 }
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
-  const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [usernameAvailable, setUsernameAvailable] = useState(false);
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [brand, setBrand] = useState('');
@@ -44,9 +44,10 @@ export default function RegisterPage() {
           body: JSON.stringify({username: username}),
         });
         const data = await response.json();
+        console.log(data);
         setUsernameAvailable(data.available);
     }
-};
+  };
 
   const sendRegistrationDetails = async() => {
     
@@ -104,7 +105,7 @@ export default function RegisterPage() {
             <label
               htmlFor="username"
               style={{ display: 'block', marginBottom: '5px' }}>
-              Foydalanuvchi nomi (login) {usernameAvailable ? <Username /> : ''}
+              Foydalanuvchi nomi (login) {usernameAvailable ? '' : <Username /> }
             </label>
             <input
                 type="text"
@@ -113,7 +114,7 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
-                  setUsernameAvailable(null);
+                  setUsernameAvailable(false);
                 }}
                 onBlur={checkUsernameAvailability}
                 required

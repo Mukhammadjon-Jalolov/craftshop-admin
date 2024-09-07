@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import styles from "../page.module.css";
+import styles from '../app/page.module.css';
 
 export default function LoginPage() {
   const router = useRouter();
