@@ -32,9 +32,6 @@ interface TempImage {
 }
 
 export default function EditProduct() {
-    //const { product } = useProduct();
-
-    //const mainImage = product?.imgUrl || '';
 
     const [currentProduct, setProduct] = useState<Product>();
     const [currentOriginalProduct, setOriginalProduct] = useState<Product>();
@@ -55,13 +52,24 @@ export default function EditProduct() {
         const parsedProduct = JSON.parse(storedProduct) as Product;
         setMainImageSrc(parsedProduct.imgUrl);
         setProduct(parsedProduct);
-        setOriginalProduct(parsedProduct);
+        setOriginalProduct(parsedProduct);  // This will be used if user Cancels editing
+
         getExtraImages(parsedProduct.id, parsedProduct.imgUrl); // Ensure `id` exists
-        getCategories();
       } else {
         console.error('No product found in localStorage');
       }
-    }, [currentProduct]);
+    }, []);
+
+    useEffect(() => {
+      if (currentProduct) {
+          getExtraImages(currentProduct.id, currentProduct.imgUrl); // Ensure `id` exists
+      }
+    }, [currentProduct]); // Separate fetching of extra images when `currentProduct` is set
+
+    useEffect(() => {
+      getCategories(); // Separate effect to get categories
+    }, []); // Only fetch categories once on mount
+
     
     const getExtraImages = async (itemId: number, mainImg: string) => {
       try{
@@ -180,24 +188,26 @@ export default function EditProduct() {
     }
 
     const saveProductDetails = async() => {
-      const formData = new FormData();
 
-      // Append state values to FormData
-      formData.append('itemId', currentProduct!.id.toString());
-      formData.append('itemName', currentProduct!.name);
-      formData.append('description', currentProduct!.description);
-      formData.append('category', currentProduct!.category);
-      formData.append('price', currentProduct!.price.toString());
+      const payload = {
+        itemId: currentProduct!.id,
+        itemName: currentProduct!.name,
+        description: currentProduct!.description,
+        category: currentProduct!.category,
+        price: currentProduct!.price,
+      };
 
       try {
-        // Send the formData to the server
         const response = await fetch('https://dreamlocation.uz/updateproduct', {
           method: 'POST',
-          body: formData,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
         });
     
         const result = await response.json();
-        if (result.success) {
+        if (response.ok) {
           alert('Images and data have been successfully updated!');
         } else {
           alert('Failed to update images and data.');
@@ -351,6 +361,7 @@ export default function EditProduct() {
               id="itemName" 
               name="itemName" 
               maxLength={50} 
+              onChange={(e) => setProduct({ ...currentProduct, name: e.target.value })} // Update only the 'name' field
               value={currentProduct.name} required /> : 
             <input 
               type="text" 
@@ -367,7 +378,9 @@ export default function EditProduct() {
               id="description" 
               name="description" 
               maxLength={200} 
-              rows={3} 
+              rows={3}
+              value={currentProduct.description || ''} // Use value attribute to control the textarea
+              onChange={(e) => setProduct({ ...currentProduct, description: e.target.value })} // Update only the 'name' field 
               required>
                 {currentProduct.description}
             </textarea> : 
@@ -381,22 +394,36 @@ export default function EditProduct() {
           <br/>
 
           <label htmlFor="category">Category</label> <br/>
-          {editingFields ? <select id="category" name="category" required value={currentProduct.category}>
+          {editingFields ? 
+            <select 
+              id="category" 
+              name="category" 
+              value={currentProduct.category}
+              onChange={(e) => setProduct({ ...currentProduct, category: e.target.value })} // Update selected category
+              required>
+              {categories.map((category, index) => (
+                <option key={index} value={category}>
+                    {category}
+                </option>
+              ))}
+            </select> : 
+            <select id="category" name="category" required value={currentProduct.category} disabled>
             {categories.map((category, index) => (
               <option key={index} value={category}>{category}</option>
             ))}
-          </select> : 
-          <select id="category" name="category" required value={currentProduct.category} disabled>
-          {categories.map((category, index) => (
-            <option key={index} value={category}>{category}</option>
-          ))}
-        </select> }
-          
+          </select> }
           <br/>
 
           <label htmlFor="price">Price:</label> <br/>
-          {editingFields ? <input type="text" id="price" name="price" value={currentProduct.price} required /> : 
-          <input type="text" id="price" name="price" value={currentProduct.price} required disabled />}
+            {editingFields ? 
+              <input
+                type="number" 
+                id="price" 
+                name="price" 
+                value={currentProduct.price} 
+                onChange={(e) => setProduct({ ...currentProduct, price: Number(e.target.value) })} // Update only the 'name' field
+                required /> : 
+              <input type="text" id="price" name="price" value={currentProduct.price} required disabled />}
           <br/>
 
           <div className={styles.buttonContainer}>
@@ -423,16 +450,16 @@ export default function EditProduct() {
             </button>}
 
             {modalImage && (
-            <div id="imageModal" className={styles.modal} style={{ display: 'block' }}>
-                <span className={styles.close} onClick={closeModal}>&times;</span>
-                <div className={styles.modalContent}>
-                <Image 
-                  id="modalImage" 
-                  src={modalImage} 
-                  alt="Modal Preview"
-                  unoptimized />
-                </div>
-            </div>
+              <div id="imageModal" className={styles.modal} style={{ display: 'block' }}>
+                  <span className={styles.close} onClick={closeModal}>&times;</span>
+                  <div className={styles.modalContent}>
+                  <Image 
+                    id="modalImage" 
+                    src={modalImage} 
+                    alt="Modal Preview"
+                    unoptimized />
+                  </div>
+              </div>
             )}
           </div>
       </div>
