@@ -7,6 +7,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import exp from "constants";
 import { useProduct } from '../../context/ProductContext';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 interface Product {
   id: number;
@@ -45,6 +46,7 @@ export default function EditProduct() {
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [modalImage, setModalImage] = useState<string | null>(null);
     const [tobeDeletedImg, setDeletingImages] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
       const storedProduct = localStorage.getItem('editingproduct');
@@ -64,7 +66,7 @@ export default function EditProduct() {
       if (currentProduct) {
           getExtraImages(currentProduct.id, currentProduct.imgUrl); // Ensure `id` exists
       }
-    }, [currentProduct]); // Separate fetching of extra images when `currentProduct` is set
+    }, []); // Separate fetching of extra images when `currentProduct` is set
 
     useEffect(() => {
       getCategories(); // Separate effect to get categories
@@ -79,7 +81,7 @@ export default function EditProduct() {
 
         // This request is done to get extra images of the product. Because produt item has only one image by default
         const fetchData = async () => {
-            const response = await fetch('https://dreamlocation.uz/api/getimages', {
+            const response = await fetch('https://dreamlocation.uz/getimages', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,6 +89,7 @@ export default function EditProduct() {
                 body: JSON.stringify(editdata),
             });
             const results = await response.json();
+            console.log(results);
             handleResults(results, mainImg);
         }
         fetchData();
@@ -156,6 +159,8 @@ export default function EditProduct() {
     };
 
     const saveImageChanges = async () => {
+      setIsLoading(true);
+
       const formData = new FormData();
       formData.append('itemId', currentProduct!.id.toString());
       formData.append('itemName', currentProduct!.name);
@@ -175,6 +180,7 @@ export default function EditProduct() {
         if (response.ok) {
           // Handle the response
           console.log('Images updated successfully');
+          setIsLoading(false);
           window.alert('Images updated successfully');
         } else {
           console.error('Failed to update images');
@@ -188,6 +194,7 @@ export default function EditProduct() {
     }
 
     const saveProductDetails = async() => {
+      setIsLoading(true);
 
       const payload = {
         itemId: currentProduct!.id,
@@ -207,7 +214,10 @@ export default function EditProduct() {
         });
     
         const result = await response.json();
+        console.log('Response:', result);
+
         if (response.ok) {
+          setIsLoading(false);
           alert('Images and data have been successfully updated!');
         } else {
           alert('Failed to update images and data.');
@@ -251,6 +261,9 @@ export default function EditProduct() {
       <header>
         <h1>Edit Product</h1>
       </header>
+
+      {isLoading && <LoadingOverlay />}
+      
       <div className={styles.container}>
         <Image 
           id="mainImage" 

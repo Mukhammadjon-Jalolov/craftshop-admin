@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from "../page.module.css";
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 export default function ConfirmPage() {
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -19,6 +22,7 @@ export default function ConfirmPage() {
   }, []);
 
   const sendRegistrationDetails = async() => {
+    setIsLoading(true);
 
     try {
       // Send the formData to the server
@@ -32,6 +36,7 @@ export default function ConfirmPage() {
   
       const result = await response.json();
       if (response.ok) {
+        setIsLoading(false);
         window.alert('Registration complete! You can login now');
         router.push('/login');
       } else {
@@ -47,9 +52,11 @@ export default function ConfirmPage() {
       <header style={{ textAlign: 'center', marginBottom: '20px' }}>
         <h1>Craft Shop Admin Page</h1>
       </header>
+
+      {isLoading && <LoadingOverlay />}
+      
       <div className={styles.container}>
         <h2>Tasdiqlash uchun SMS kodni kiriting</h2>
-
           <div style={{ marginBottom: '5px', position: 'relative', width: '100%' }}>
             <label htmlFor="code" style={{ display: 'block', marginBottom: '5px' }}>SMS kod</label>
             <input

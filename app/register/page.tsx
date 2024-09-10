@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from "../page.module.css";
 import GoogleMapComponent from '../../components/GoogleMapComponent';
 import { json } from 'stream/consumers';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 function Username(){
   return(
@@ -14,7 +15,7 @@ function Username(){
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
-  const [usernameAvailable, setUsernameAvailable] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState(true);
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [brand, setBrand] = useState('');
@@ -22,6 +23,7 @@ export default function RegisterPage() {
   const [password2, setPassword2] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLocationSelect = (selectedLocation: { lat: number; lng: number }) => {
@@ -36,7 +38,7 @@ export default function RegisterPage() {
 
   const checkUsernameAvailability = async () => {
     if (username.trim()) {
-        const response = await fetch('/api/usernamecheck', {
+        const response = await fetch('https://dreamlocation.uz/api/usernamecheck', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -50,7 +52,8 @@ export default function RegisterPage() {
   };
 
   const sendRegistrationDetails = async() => {
-    
+    setIsLoading(true);
+
     if (!location) {
       alert('Map location must be set');
       return;
@@ -79,6 +82,7 @@ export default function RegisterPage() {
       }
 
       if (response.ok) {
+        setIsLoading(false);
         const data = await response.json();
         console.log('registration started and code: ', data.smsCode );
         localStorage.setItem('regprocess', JSON.stringify({username: data.username, code: data.smsCode}));
@@ -114,7 +118,7 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
-                  setUsernameAvailable(false);
+                  setUsernameAvailable(true);
                 }}
                 onBlur={checkUsernameAvailability}
                 required

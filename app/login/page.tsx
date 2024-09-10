@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const togglePasswordVisibility = () => {
@@ -16,32 +17,41 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+    try {
+        // Send login request to server
+        const response = await fetch('https://dreamlocation.uz/api/login', {
+            method: 'POST',
+            credentials: 'include', // Allows cookies (if used)
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        });
 
-    const response = await fetch('https://dreamlocation.uz/api/login', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username: username, password: password }),
-    });
+        // Parse response
+        const result = await response.json();
 
-    console.log(response);
+        // Check if the request was successful
+        if (response.ok) {
+            const { token } = result;
 
-    const result = await response.json();
-
-    if (response.ok) {
-      const { token } = result;
-      
-      localStorage.setItem('token', token); // Save token in localStorage
-      // Handle successful login, for example, redirect to another page
-      router.push('/admin');
-    } else {
-      // Handle login error
-      alert('Login failed. Please check your credentials and try again.');
-      console.log("response not ok", result.info);
+            // Save token in localStorage
+            localStorage.setItem('token', token);
+            setIsLoading(false);
+            // Redirect user to the admin page after successful login
+            router.push('/admin');
+        } else {
+            // If login fails, alert the user and log the issue
+            alert('Login failed. Please check your credentials and try again.');
+            console.log("Login error:", result?.message || result?.error || "Unknown error");
+        }
+    } catch (error) {
+        // Handle any unexpected errors during the login process
+        console.error("Error during login:", error);
+        alert('An error occurred. Please try again later.');
     }
-  };
+};
 
   return (
     <div style={{ padding: '20px', maxWidth: '400px', margin: '0 auto' }}>

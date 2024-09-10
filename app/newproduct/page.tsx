@@ -46,7 +46,7 @@ export default function CreateProduct() {
     formData.append('category', category);
     formData.append('price', price);
 
-    selectedImages.forEach((image, index) => {
+    selectedImages.forEach((image) => {
       formData.append('images', image);
     });
 
@@ -56,15 +56,13 @@ export default function CreateProduct() {
         body: formData,
       });
 
-      const result = await response.json();
-
       if (response.ok) {
-        // Handle successful form submission
-        alert(result.info)        
+        const result = await response.json();
+        alert(result.info);
         // Optionally reset form fields here
       } else {
-        // Handle server errors
-        alert('Failed to add product');
+        const errorResult = await response.text(); // Use text() to get non-JSON responses
+        alert(`Failed to add product: ${errorResult}`);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -73,11 +71,12 @@ export default function CreateProduct() {
         setIsLoading(false);
         setItemName('');
         setDescription('');
-        setCategory;('-');
+        setCategory('-');
         setPrice('');
         setSelectedImages([]);
     }
-  };
+};
+
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
