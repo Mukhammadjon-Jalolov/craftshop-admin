@@ -11,8 +11,14 @@ interface CreateProductProps {
 
 export default function CreateProduct() {
     
-  const [itemName, setItemName] = useState<string>('');
-  const [description, setDescription] = useState<string>('');
+  const [itemNameUz, setItemNameUz] = useState<string>('');
+  const [descriptionUz, setDescriptionUz] = useState<string>('');
+
+  const [nameEn, setNameEn] = useState<string>('');
+  const [descEn, setDescEn] = useState<string>('');
+  const [nameRu, setNameRu] = useState<string>('');
+  const [descRu, setDescRu] = useState<string>('');
+
   const [category, setCategory] = useState<string>('-');
   const [price, setPrice] = useState<string>('');
 
@@ -41,8 +47,14 @@ export default function CreateProduct() {
     setIsLoading(true);
 
     const formData = new FormData();
-    formData.append('itemName', itemName);
-    formData.append('description', description);
+    formData.append('itemName', itemNameUz);
+    formData.append('description', descriptionUz);
+
+    formData.append('nameEn', nameEn);
+    formData.append('descEn', descEn);
+    formData.append('nameRu', nameRu);
+    formData.append('descRu', descRu);
+
     formData.append('category', category);
     formData.append('price', price);
 
@@ -69,8 +81,8 @@ export default function CreateProduct() {
       alert('An error occurred while submitting the form');
     } finally {
         setIsLoading(false);
-        setItemName('');
-        setDescription('');
+        setItemNameUz('');
+        setDescriptionUz('');
         setCategory('-');
         setPrice('');
         setSelectedImages([]);
@@ -111,7 +123,8 @@ export default function CreateProduct() {
   return (
     <div>
         <header>
-            <h1>Create product</h1>
+            <h2><a href="/admin" > Home </a></h2>
+            <h2>Create product</h2>
         </header>
 
         {isLoading && <LoadingOverlay />}
@@ -119,26 +132,68 @@ export default function CreateProduct() {
         <div className={styles.container}>
         <form onSubmit={handleSubmit} encType="multipart/form-data">
 
-            <label htmlFor="itemName">Item Name:</label>
+            <label htmlFor="itemNameUz">Nomi Uz:</label>
             <input 
                 type="text" 
-                id="itemName" 
-                name="itemName" 
+                id="itemNameUz" 
+                name="itemNameUz" 
                 maxLength={50} 
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)} 
+                value={itemNameUz}
+                onChange={(e) => setItemNameUz(e.target.value)} 
                 required />
-
             <br/>
-            <label htmlFor="description">Description:</label>
+            <label htmlFor="nameEn">Name English:</label>
+            <input 
+                type="text" 
+                id="nameEn" 
+                name="nameEn" 
+                maxLength={50} 
+                value={nameEn}
+                onChange={(e) => setNameEn(e.target.value)} 
+                required />
+            <br/>
+            <label htmlFor="nameRu">Название Ru:</label>
+            <input 
+                type="text" 
+                id="nameRu" 
+                name="nameRu" 
+                maxLength={50} 
+                value={nameRu}
+                onChange={(e) => setNameRu(e.target.value)} 
+                required />
+            <br/>
+
+            <label htmlFor="descriptionUz">Ta&apos;rifi Uz:</label>
             <br/>
             <textarea 
-                id="description" 
-                name="description" 
+                id="descriptionUz" 
+                name="descriptionUz" 
                 maxLength={200} 
                 rows={3} 
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={descriptionUz}
+                onChange={(e) => setDescriptionUz(e.target.value)}
+                required />
+            <br/>
+            <label htmlFor="descEn">Description English:</label>
+            <br/>
+            <textarea 
+                id="descEn" 
+                name="descEn" 
+                maxLength={200} 
+                rows={3} 
+                value={descEn}
+                onChange={(e) => setDescEn(e.target.value)}
+                required />
+            <br/>
+            <label htmlFor="descRu">Описание Ru:</label>
+            <br/>
+            <textarea 
+                id="descRu" 
+                name="descRu" 
+                maxLength={200} 
+                rows={3} 
+                value={descRu}
+                onChange={(e) => setDescRu(e.target.value)}
                 required />
             <br/>
 

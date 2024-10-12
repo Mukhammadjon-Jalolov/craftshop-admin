@@ -113,8 +113,8 @@ export default function Home() {
               <div className={styles.cardContent}>
                 <div className={styles.cardDetails}>
                   <div className={styles.cardTitle}>{item.name}</div>
-                  <div className={styles.cardDescription}>Description: {item.description}</div>
-                  <div className={styles.cardPrice}>Price: {item.price}</div>
+                  <div className={styles.cardDescription}>{item.description}</div>
+                  <div className={styles.cardPrice}>Narxi: {item.price}</div>
                 </div>
                 <div className={styles.cardActions}>
                   <button

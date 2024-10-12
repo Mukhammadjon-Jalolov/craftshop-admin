@@ -27,6 +27,13 @@ interface Results {
   images: ImageResult[];
 }
 
+interface Translations {
+  nameEn: string;
+  nameRu: string;
+  descEn: string;
+  descRu: string;
+}
+
 interface TempImage {
   src: string;
   file: File;
@@ -48,30 +55,33 @@ export default function EditProduct() {
     const [tobeDeletedImg, setDeletingImages] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    const [originalTranslations, setOriginalTranslations] = useState<Translations>();
+    const [nameEn, setEnglishName] = useState('');
+    const [nameRu, setRusName] = useState('');
+    const [descEn, setEnglishDesc] = useState('');
+    const [descRu, setRusDesc] = useState('');
+
     useEffect(() => {
       const storedProduct = localStorage.getItem('editingproduct');
       if (storedProduct) {
         const parsedProduct = JSON.parse(storedProduct) as Product;
         setMainImageSrc(parsedProduct.imgUrl);
+        
+        // This is how the editing product is read from LocalStorage
         setProduct(parsedProduct);
         setOriginalProduct(parsedProduct);  // This will be used if user Cancels editing
 
         getExtraImages(parsedProduct.id, parsedProduct.imgUrl); // Ensure `id` exists
+        getTranslations(parsedProduct.id);
+
       } else {
         console.error('No product found in localStorage');
       }
     }, []);
 
     useEffect(() => {
-      if (currentProduct) {
-          getExtraImages(currentProduct.id, currentProduct.imgUrl); // Ensure `id` exists
-      }
-    }, []); // Separate fetching of extra images when `currentProduct` is set
-
-    useEffect(() => {
       getCategories(); // Separate effect to get categories
     }, []); // Only fetch categories once on mount
-
     
     const getExtraImages = async (itemId: number, mainImg: string) => {
       try{
@@ -90,12 +100,15 @@ export default function EditProduct() {
             });
             const results = await response.json();
             console.log(results);
-            handleResults(results, mainImg);
+
+            if(results.images){
+              handleResults(results, mainImg);
+            }
         }
         fetchData();
 
       } catch(error){
-        console.error('Error verifying token:', error);
+        console.error('Error getting extra images:', error);
       }
     }
 
@@ -111,6 +124,33 @@ export default function EditProduct() {
         setCategories(results.categories);
       }
       fetchData();
+    }
+
+    const getTranslations = async (currentId: number) => {
+
+      console.log("getTranslations function started");
+
+      try{
+        const response = await fetch('https://dreamlocation.uz/api/getTranslations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({currentId: currentId}),
+        });
+        const results = await response.json();
+        console.log(results, " translation results and current id: ", currentId);
+
+        setOriginalTranslations(results);
+
+        setEnglishName(results.nameEn);
+        setRusName(results.nameRu);
+        setEnglishDesc(results.descEn);
+        setRusDesc(results.descRu);
+
+      } catch(error){
+        console.error('Error getting translations:', error);
+      }
     }
 
     const handleResults = (results: Results, mainImg: string) => {
@@ -151,6 +191,11 @@ export default function EditProduct() {
       setExtraImages(originalImages);
       setSelectedImages([]);
       setDeletingImages([]);
+
+      setEnglishName(originalTranslations?.nameEn || '');
+      setRusName(originalTranslations?.nameRu || '');
+      setEnglishDesc(originalTranslations?.descEn || '');
+      setRusDesc(originalTranslations?.descRu || '');
     }
 
     const handleImageDelete = (index: number) => {
@@ -163,7 +208,7 @@ export default function EditProduct() {
 
       const formData = new FormData();
       formData.append('itemId', currentProduct!.id.toString());
-      formData.append('itemName', currentProduct!.name);
+      formData.append('nameUz', currentProduct!.name);
       
       selectedImages.forEach((file, index) => {
         formData.append('newImages', file);
@@ -198,11 +243,19 @@ export default function EditProduct() {
 
       const payload = {
         itemId: currentProduct!.id,
-        itemName: currentProduct!.name,
-        description: currentProduct!.description,
+        nameUz: currentProduct!.name,
+        descUz: currentProduct!.description,
+
+        englishName: nameEn,
+        englishDesc: descEn,
+        rusName: nameRu,
+        rusDesc: descRu,
+
         category: currentProduct!.category,
         price: currentProduct!.price,
       };
+
+      console.log("payload to update product ", payload);
 
       try {
         const response = await fetch('https://dreamlocation.uz/updateproduct', {
@@ -219,6 +272,8 @@ export default function EditProduct() {
         if (response.ok) {
           setIsLoading(false);
           alert('Images and data have been successfully updated!');
+          // Setting editing false
+          setEditingFields(false);
         } else {
           alert('Failed to update images and data.');
         }
@@ -259,7 +314,8 @@ export default function EditProduct() {
     return (
     <div>
       <header>
-        <h1>Edit Product</h1>
+        <h2><a href="/admin" > Home </a></h2>
+        <h2>Edit Product</h2>
       </header>
 
       {isLoading && <LoadingOverlay />}
@@ -274,7 +330,8 @@ export default function EditProduct() {
           />
 
         <div className={styles.imageRow} id="imageRow">
-          {extraImages.map((source, index) => (
+
+          {extraImages.length > 0 && extraImages.map((source, index) => (
             <div className={styles.imageWrapper} id={`imageWrapper${index}`} key={index}>
               <Image 
                 src={`https://dreamlocation.uz/rasmlar/${encodeURIComponent(source)}`}
@@ -363,50 +420,122 @@ export default function EditProduct() {
           </button> }
         </div>
 
-          <label htmlFor="itemId">Item ID</label> <br/>
+          <label htmlFor="itemId">ID</label> <br/>
           <input type="text" id="itemId" name="itemId" maxLength={50} value={currentProduct.id} required disabled />
           <br/>
 
-          <label htmlFor="itemName">Name</label> <br/>
-          {editingFields ? 
-            <input 
-              type="text" 
-              id="itemName" 
-              name="itemName" 
-              maxLength={50} 
-              onChange={(e) => setProduct({ ...currentProduct, name: e.target.value })} // Update only the 'name' field
-              value={currentProduct.name} required /> : 
-            <input 
-              type="text" 
-              id="itemName" 
-              name="itemName" 
-              maxLength={50} 
-              value={currentProduct.name} required disabled />
-          }
-          <br/>
+              <label htmlFor="nameUz"><strong>Maxsulot nomi</strong></label> <br/>
+              <label htmlFor="nameUz">O&apos;zbek tilida</label> <br/>
+              {editingFields ? 
+                <input 
+                  type="text" 
+                  id="nameUz" 
+                  name="nameUz" 
+                  maxLength={50} 
+                  onChange={(e) => setProduct({ ...currentProduct, name: e.target.value })} // Update only the 'name' field
+                  value={currentProduct.name} required /> : 
+                <input 
+                  type="text" 
+                  id="nameUz" 
+                  name="nameUz" 
+                  maxLength={50} 
+                  value={currentProduct.name} required disabled />
+              }
+              <br/>
+              <label htmlFor="nameEn">Inglizchasi</label> <br/>
+              {editingFields ? 
+                <input 
+                  type="text" 
+                  id="nameEn" 
+                  name="nameEn" 
+                  maxLength={50} 
+                  onChange={(e) => setEnglishName(e.target.value)} // Update only the 'name' field
+                  value={nameEn} required /> : 
+                <input 
+                  type="text" 
+                  id="nameEn" 
+                  name="nameEn" 
+                  maxLength={50} 
+                  value={nameEn} required disabled />
+              }
+              <br/>
+              <label htmlFor="nameRu">Ruschasi</label> <br/>
+              {editingFields ? 
+                <input 
+                  type="text" 
+                  id="nameRu" 
+                  name="nameRu" 
+                  maxLength={50} 
+                  onChange={(e) => setRusName(e.target.value)} // Update only the 'name' field
+                  value={nameRu} required /> : 
+                <input 
+                  type="text" 
+                  id="nameRu" 
+                  name="nameRu" 
+                  maxLength={50} 
+                  value={nameRu} required disabled />
+              }
+              <br/>
 
-          <label htmlFor="description">Description</label> <br/>
-          {editingFields ? 
-            <textarea 
-              id="description" 
-              name="description" 
-              maxLength={200} 
-              rows={3}
-              value={currentProduct.description || ''} // Use value attribute to control the textarea
-              onChange={(e) => setProduct({ ...currentProduct, description: e.target.value })} // Update only the 'name' field 
-              required>
-                {currentProduct.description}
-            </textarea> : 
-            <textarea 
-              id="description" 
-              name="description" 
-              maxLength={200} 
-              rows={3} 
-              required disabled>{currentProduct.description}</textarea>
-          }
-          <br/>
+          <label htmlFor="description"><strong>Ta&apos;rifi</strong></label> <br/>
+                <label htmlFor="description">O&apos;zbek tilida</label> <br/>
+                {editingFields ? 
+                  <textarea 
+                    id="description" 
+                    name="description" 
+                    maxLength={200} 
+                    rows={3}
+                    value={currentProduct.description || ''} // Use value attribute to control the textarea
+                    onChange={(e) => setProduct({ ...currentProduct, description: e.target.value })} // Update only the 'name' field 
+                    required /> : 
+                  <textarea 
+                    id="description" 
+                    name="description" 
+                    maxLength={200} 
+                    rows={3} 
+                    required disabled>{currentProduct.description}</textarea>
+                }
+                <br/>
+                <label htmlFor="descriptionEn">Inglizchasi</label> <br/>
+                  {editingFields ? 
+                    <textarea 
+                      id="descriptionEn" 
+                      name="descriptionEn" 
+                      maxLength={200} 
+                      rows={3}
+                      value={descEn} // Use value attribute to control the textarea
+                      onChange={(e) => setEnglishDesc(e.target.value)} // Update only the 'name' field 
+                      required /> : 
+                    <textarea 
+                      id="descriptionEn" 
+                      name="descriptionEn" 
+                      maxLength={200} 
+                      rows={3} 
+                      value={descEn}
+                      required disabled />
+                  }
+                <br/>
+                <label htmlFor="descriptionRu">Ruschasi</label> <br/>
+                  {editingFields ? 
+                    <textarea 
+                      id="descriptionRu" 
+                      name="descriptionRu" 
+                      maxLength={200} 
+                      rows={3}
+                      value={descRu} // Use value attribute to control the textarea
+                      onChange={(e) => setRusDesc(e.target.value)} // Update only the 'name' field 
+                      required /> : 
+                    <textarea 
+                      id="descriptionRu" 
+                      name="descriptionRu" 
+                      maxLength={200} 
+                      rows={3} 
+                      value={descRu}
+                      required disabled />
+                  }
+                <br/>
 
-          <label htmlFor="category">Category</label> <br/>
+          <label htmlFor="category">Kategoriya</label> <br/>
           {editingFields ? 
             <select 
               id="category" 
@@ -427,7 +556,7 @@ export default function EditProduct() {
           </select> }
           <br/>
 
-          <label htmlFor="price">Price:</label> <br/>
+          <label htmlFor="price">Narxi</label> <br/>
             {editingFields ? 
               <input
                 type="number" 
